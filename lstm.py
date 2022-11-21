@@ -27,7 +27,7 @@ def xavier_init(column, row, he=False):
 # https://yngie-c.github.io/deep%20learning/2020/03/17/parameter_init/
 class NeuralNetwork:
     def __init__(self, input_nodes, hidden_nodes, output_nodes,
-                 activation_function, learning_rate=0.2, hidden_layers=1, bias=0):
+                 activation_function, final_function, learning_rate=0.2, hidden_layers=1, bias=0):
         for n in [input_nodes, hidden_nodes, output_nodes, hidden_layers]:
             if n < 1:
                 raise ValueError("All of nodes arguments must be positive integer")
@@ -40,9 +40,13 @@ class NeuralNetwork:
             raise ValueError("Learning rate must be between 0 to 1")
         self.lr = learning_rate
 
-        if not callable(activation_function):
-            raise TypeError("An activation_function argument is not callable")
+        for f in [activation_function, final_function]:
+            if not callable(f):
+                raise TypeError("An activation_function argument is not callable")
         self.activation_function = activation_function
+        self.final_function = final_function
+
+        self.bias = bias
 
         self.weight_array_ih = xavier_init(self.hnodes, self.inodes)
         self.weight_array_hh = []
@@ -62,22 +66,22 @@ class NeuralNetwork:
         # input to hidden
         inputs = np.array(inputs_list, ndmin=2).T
         hidden_inputs = np.dot(self.weight_array_ih, inputs)
-        hidden_outputs = np.array(list(map(self.activation_function, hidden_inputs)))
+        hidden_outputs = np.array(list(map(self.activation_function, hidden_inputs))) + self.bias
 
         # hidden to hidden
         for i in range(self.hidden_layers - 1):
             hidden_inputs = np.dot(self.weight_array_hh[i], hidden_outputs)
-            hidden_outputs = np.array(list(map(self.activation_function, hidden_inputs)))
+            hidden_outputs = np.array(list(map(self.activation_function, hidden_inputs))) + self.bias
 
         # hidden to output
         final_inputs = np.dot(self.weight_array_ho, hidden_outputs)
-        final_outputs = np.array(list(map(self.activation_function, final_inputs)))
+        final_outputs = np.array(list(map(self.final_function, final_inputs)))
 
         return final_outputs
 
 
 array_sample = np.random.rand(3, 3)
 
-n = NeuralNetwork(2, 3, 1, sigmoid, learning_rate=0.3, hidden_layers=3)
+n = NeuralNetwork(2, 3, 1, sigmoid, relu, learning_rate=0.3, hidden_layers=3)
 
 print(n.query([1.0, 0.5]))
