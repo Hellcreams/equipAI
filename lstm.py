@@ -59,9 +59,25 @@ class NeuralNetwork:
         # STEP 1. 출력 계층의 오차 계산
 
     def query(self, inputs_list):
-        inputs = np.array(inputs_list, ndim=2).T
+        # input to hidden
+        inputs = np.array(inputs_list, ndmin=2).T
         hidden_inputs = np.dot(self.weight_array_ih, inputs)
+        hidden_outputs = np.array(list(map(self.activation_function, hidden_inputs)))
 
+        # hidden to hidden
+        for i in range(self.hidden_layers - 1):
+            hidden_inputs = np.dot(self.weight_array_hh[i], hidden_outputs)
+            hidden_outputs = np.array(list(map(self.activation_function, hidden_inputs)))
+
+        # hidden to output
+        final_inputs = np.dot(self.weight_array_ho, hidden_outputs)
+        final_outputs = np.array(list(map(self.activation_function, final_inputs)))
+
+        return final_outputs
 
 
 array_sample = np.random.rand(3, 3)
+
+n = NeuralNetwork(2, 3, 1, sigmoid, learning_rate=0.3, hidden_layers=3)
+
+print(n.query([1.0, 0.5]))
