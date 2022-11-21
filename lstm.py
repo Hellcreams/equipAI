@@ -25,9 +25,10 @@ def xavier_init(column, row, he=False):
 # 참고자료
 # https://airsbigdata.tistory.com/195
 # https://yngie-c.github.io/deep%20learning/2020/03/17/parameter_init/
+# https://webnautes.tistory.com/1655
 class NeuralNetwork:
     def __init__(self, input_nodes, hidden_nodes, output_nodes,
-                 activation_function, final_function, learning_rate=0.2, hidden_layers=1, bias=0):
+                 activation_function, learning_rate=0.2, hidden_layers=1, bias=0):
         for n in [input_nodes, hidden_nodes, output_nodes, hidden_layers]:
             if n < 1:
                 raise ValueError("All of nodes arguments must be positive integer")
@@ -40,11 +41,9 @@ class NeuralNetwork:
             raise ValueError("Learning rate must be between 0 to 1")
         self.lr = learning_rate
 
-        for f in [activation_function, final_function]:
-            if not callable(f):
-                raise TypeError("An activation_function argument is not callable")
+        if not callable(activation_function):
+            raise TypeError("An activation_function argument is not callable")
         self.activation_function = activation_function
-        self.final_function = final_function
 
         self.bias = bias
 
@@ -54,13 +53,6 @@ class NeuralNetwork:
             for _ in range(hidden_layers-1):
                 self.weight_array_hh.append(xavier_init(hidden_nodes, hidden_nodes))
         self.weight_array_ho = xavier_init(self.onodes, self.hnodes)
-
-    def train(self, inputs_list, targets_list):
-        # STEP 0. 행렬 변환
-        inputs = np.array(inputs_list, ndmin=2).T
-        targets = np.array(targets_list, ndmin=2).T
-
-        # STEP 1. 출력 계층의 오차 계산
 
     def query(self, inputs_list):
         # input to hidden
@@ -75,13 +67,24 @@ class NeuralNetwork:
 
         # hidden to output
         final_inputs = np.dot(self.weight_array_ho, hidden_outputs)
-        final_outputs = np.array(list(map(self.final_function, final_inputs)))
+        final_outputs = np.array(list(map(self.activation_function, final_inputs)))
 
         return final_outputs
+
+    def train(self, inputs_list, targets_list):
+        # STEP 0. 행렬 변환
+        targets = np.array(targets_list, ndmin=2).T
+        final_outputs = self.query(inputs_list.T)
+
+        # STEP 1. 출력 계층의 오차 계산
+        output_errors = targets - final_outputs
+
+        # STEP 2. 은닉 계층의 역전파된 오차 계산
+        hidden_errors = np.dot(self.weight_array_ho.T, output_errors)
 
 
 array_sample = np.random.rand(3, 3)
 
-n = NeuralNetwork(2, 3, 1, sigmoid, relu, learning_rate=0.3, hidden_layers=3)
+n = NeuralNetwork(2, 3, 1, sigmoid, learning_rate=0.3, hidden_layers=3)
 
 print(n.query([1.0, 0.5]))
