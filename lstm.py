@@ -22,6 +22,41 @@ def xavier_init(column, row, he=False):
     return np.random.randn(column, row) / sqrt(m / column)
 
 
+class AddLayer:
+    def __init__(self, n=2):
+        self.n = n
+
+    def forward(self, *x):
+        if len(x) != self.n:
+            raise ValueError(f"AddLayer has {0} inputs, but got {1} arguments".format(n, len(x)))
+        y = 0
+        for i in x:
+            y += i
+        return y
+
+
+    def backward(self, dout):
+        return (dout for _ in range(self.n))
+
+
+class MulLayer:
+    def __init__(self, n=2):
+        self.x = None
+        self.n = n
+
+    def forward(self, *x):
+        if len(x) != self.n:
+            raise ValueError(f"AddLayer has {0} inputs, but got {1} arguments".format(n, len(x)))
+        y = 1
+        for i in x:
+            y *= i
+        return y
+
+    def backward(self, dout):
+        return tuple(i * dout for i in self.x)
+
+
+
 # 참고자료
 # https://airsbigdata.tistory.com/195
 # https://yngie-c.github.io/deep%20learning/2020/03/17/parameter_init/
@@ -104,7 +139,9 @@ class NeuralNetwork:
 
 array_sample = np.random.rand(3, 3)
 
+"""
 n = NeuralNetwork(2, 3, 2, sigmoid, learning_rate=0.3, hidden_layers=3)
 
 print(n.query([1.0, 0.5]))
 print(n.train([1.0, 0.5], [1.0, 0.5]))
+"""
