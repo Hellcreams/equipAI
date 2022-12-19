@@ -22,18 +22,21 @@ def xavier_init(column, row, he=False):
     return np.random.randn(column, row) / sqrt(m / column)
 
 
+def tanh_diff(x):
+    return (1 - tanh(x)) * (1 + tanh(x))
+
+
 class AddLayer:
     def __init__(self, n=2):
         self.n = n
 
     def forward(self, *x):
         if len(x) != self.n:
-            raise ValueError(f"AddLayer has {0} inputs, but got {1} arguments".format(n, len(x)))
+            raise ValueError(f"AddLayer has {0} inputs, but got {1} arguments".format(self.n, len(x)))
         y = 0
         for i in x:
             y += i
         return y
-
 
     def backward(self, dout):
         return (dout for _ in range(self.n))
@@ -46,7 +49,7 @@ class MulLayer:
 
     def forward(self, *x):
         if len(x) != self.n:
-            raise ValueError(f"AddLayer has {0} inputs, but got {1} arguments".format(n, len(x)))
+            raise ValueError(f"AddLayer has {0} inputs, but got {1} arguments".format(self.n, len(x)))
         y = 1
         for i in x:
             y *= i
@@ -61,6 +64,7 @@ class MulLayer:
 # https://airsbigdata.tistory.com/195
 # https://yngie-c.github.io/deep%20learning/2020/03/17/parameter_init/
 # https://webnautes.tistory.com/1655
+# https://docs.likejazz.com/lstm/
 class NeuralNetwork:
     def __init__(self, input_nodes, hidden_nodes, output_nodes,
                  activation_function, learning_rate=0.2, hidden_layers=1, bias=0):
@@ -137,11 +141,27 @@ class NeuralNetwork:
         self.weight_array_ih = self.lr * np.dot((hidden_errors[0] * sigmoid_diff(hidden_outputs[0])), inputs.T)
 
 
+class LSTM:
+    def __init__(self):
+        self.h = None
+        self.sigmoid_layer = NeuralNetwork("?")
+        self.tanh_layer = NeuralNetwork("?")
+        self.h1_mul_layer = MulLayer(-1)
+        self.sigtan_mul_layer = MulLayer(-1)
+        self.h2_mul_layer = MulLayer(-1)
+
+
+    def forward(self, x):
+        sig_output = self.sigmoid_layer.query("?")
+        tanh_output = self.tanh_layer.query("?")
+        self.h = self.h
+
+
+
+
 array_sample = np.random.rand(3, 3)
 
-"""
 n = NeuralNetwork(2, 3, 2, sigmoid, learning_rate=0.3, hidden_layers=3)
 
 print(n.query([1.0, 0.5]))
 print(n.train([1.0, 0.5], [1.0, 0.5]))
-"""
