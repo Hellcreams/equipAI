@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from math import e, sqrt, tanh
+from math import e, sqrt
 
 
 def relu(x):
@@ -11,10 +11,6 @@ def sigmoid(x):
     return 1 / (1 + e ** -x)
 
 
-def sigmoid_diff(x):
-    return sigmoid(x) * (1 - sigmoid(x))
-
-
 def xavier_init(column, row, he=False):
     m = 1
     if he:
@@ -22,41 +18,42 @@ def xavier_init(column, row, he=False):
     return np.random.randn(column, row) / sqrt(m / column)
 
 
-def tanh_diff(x):
-    return (1 - tanh(x)) * (1 + tanh(x))
-
-
-class AddLayer:
-    def __init__(self, n=2):
-        self.n = n
-
-    def forward(self, *x):
-        if len(x) != self.n:
-            raise ValueError(f"AddLayer has {0} inputs, but got {1} arguments".format(self.n, len(x)))
-        y = 0
-        for i in x:
-            y += i
-        return y
-
-    def backward(self, dout):
-        return (dout for _ in range(self.n))
-
-
-class MulLayer:
-    def __init__(self, n=2):
+class Perceptron:
+    def __init__(self, activation_function, diff_increment=10**-8):
         self.x = None
-        self.n = n
+        self.h = diff_increment
+        self.function = np.vectorize(activation_function)
 
-    def forward(self, *x):
-        if len(x) != self.n:
-            raise ValueError(f"AddLayer has {0} inputs, but got {1} arguments".format(self.n, len(x)))
-        y = 1
-        for i in x:
-            y *= i
-        return y
+    def forward(self, x):
+        self.x = np.array(x, dtype="float64")
+        return self.function(*x)
 
     def backward(self, dout):
-        return tuple(i * dout for i in self.x)
+        xh = np.array(self.x, dtype="float64")
+        dx = []
+        for i in range(len(xh)):
+            xh[i] += self.h
+            d = (self.function(*xh) - self.function(*self.x)) / self.h
+            dx.append(d)
+            xh[i] -= self.h
+
+        return np.array(dx) * dout
+
+
+class Gate:
+    def __init__(self, units, function, bias, diff_increment=10**-8):
+        self.perceptron = Perceptron(function, diff_increment)
+        self.input_nodes = units
+        self.bias = bias
+
+    def forward(self, x):
+        pass
+
+    def backward(self, dout):
+        pass
+
+
+
 
 
 
@@ -143,25 +140,12 @@ class NeuralNetwork:
 
 class LSTM:
     def __init__(self):
-        self.h = None
-        self.sigmoid_layer = NeuralNetwork("?")
-        self.tanh_layer = NeuralNetwork("?")
-        self.h1_mul_layer = MulLayer(-1)
-        self.sigtan_mul_layer = MulLayer(-1)
-        self.h2_mul_layer = MulLayer(-1)
-
-
-    def forward(self, x):
-        sig_output = self.sigmoid_layer.query("?")
-        tanh_output = self.tanh_layer.query("?")
-        self.h = self.h
+        pass
 
 
 
 
-array_sample = np.random.rand(3, 3)
-
-n = NeuralNetwork(2, 3, 2, sigmoid, learning_rate=0.3, hidden_layers=3)
-
-print(n.query([1.0, 0.5]))
-print(n.train([1.0, 0.5], [1.0, 0.5]))
+a = Perceptron(lambda x, y: x + y)
+print(a.forward([2, 10]))
+l = a.backward(2)
+print(l[0], l[1])
