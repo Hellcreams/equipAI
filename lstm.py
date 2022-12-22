@@ -44,16 +44,23 @@ class Gate:
     def __init__(self, units, function, bias, diff_increment=10**-8):
         self.perceptron = Perceptron(function, diff_increment)
         self.input_nodes = units
+        self.x_weight = xavier_init(units, 1)
+        self.h_weight = np.zeros((units, 1))
         self.bias = bias
 
-    def forward(self, x):
-        pass
+    def forward(self, x_t, h_t):
+        return self.perceptron.forward([self.x_weight, x_t, self.h_weight, h_t, self.bias])
 
     def backward(self, dout):
-        pass
+        return self.backward(dout)
+
+    def update_weight(self, x_weight, h_weight):
+        self.x_weight += x_weight
+        self.h_weight += h_weight
 
 
-
+class LSTM:
+    def __init__(self):
 
 
 
